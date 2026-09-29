@@ -1,9 +1,9 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,21 +24,19 @@ jobs:
           mkdir extracted
           unzip -q *.zip -d extracted
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Find project
+      - name: Enable AndroidX
         run: |
-          PROJECT_DIR=$(dirname "$(find extracted -name settings.gradle -type f | head -1)")
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "android.useAndroidX=true" > extracted/DeutschA1Premium/gradle.properties
+          echo "android.enableJetifier=true" >> extracted/DeutschA1Premium/gradle.properties
 
       - name: Build APK
+        working-directory: extracted/DeutschA1Premium
         run: |
-          cd "$PROJECT_DIR"
-          gradle assembleDebug --no-daemon
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: DeutschA1Premium-APK
-          path: "**/app/build/outputs/apk/debug/app-debug.apk"
+          path: extracted/DeutschA1Premium/app/build/outputs/apk/debug/app-debug.apk
